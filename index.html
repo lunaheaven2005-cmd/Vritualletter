@@ -146,14 +146,62 @@
       background: linear-gradient(135deg, #b9a0ce, #74668b);
     }
     
-    .nav-arrow {
-      background: rgba(171, 146, 191, 0.7);
-      padding: 0.6rem 1.2rem;
-      font-size: 1rem;
-      backdrop-filter: blur(4px);
+    /* Popup overlay */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
     }
-    .nav-arrow:hover {
-      background: #AB92BF;
+    .popup-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .popup-content {
+      background: linear-gradient(135deg, #FDF1E2, #f5e6d4);
+      border-radius: 48px;
+      padding: 2.5rem;
+      text-align: center;
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      border: 2px solid #AB92BF;
+      animation: popupBounce 0.5s ease;
+      z-index: 1001;
+    }
+    @keyframes popupBounce {
+      0% { transform: scale(0.8); opacity: 0; }
+      80% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .popup-content h3 {
+      font-size: 2rem;
+      color: #655A7C;
+      margin-bottom: 1rem;
+    }
+    .popup-content p {
+      font-size: 1.2rem;
+      color: #2d2436;
+      margin-bottom: 1.5rem;
+    }
+    .popup-content button {
+      background: linear-gradient(135deg, #AB92BF, #655A7C);
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 40px;
+      font-size: 1rem;
+      cursor: pointer;
     }
 
     /* Question styles */
@@ -415,6 +463,16 @@
 <body>
 <div id="sparkle-container"></div>
 
+<!-- Popup overlay -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-content">
+    <h3>🎉 YAYYYY! 🎉</h3>
+    <p>✨ The Memories Tour Ends ✨</p>
+    <p>💖 Thank you for being there for me! 💖</p>
+    <button onclick="closePopup()">🤗 Close 🤗</button>
+  </div>
+</div>
+
 <!-- PAGE 0: opening with photo - CENTERED -->
 <div class="page active" id="page0">
   <div class="blur-bg"></div>
@@ -489,7 +547,7 @@
     <h2>CORE MEMORIES 🖼️</h2>
     <div class="polaroid-grid" id="polaroidGrid"></div>
     <div class="button-group">
-      <button class="btn" onclick="openEnvelopePage()">here the letter ➜</button>
+      <button class="btn" onclick="openEnvelopePage()">Here's Your Letter ➜</button>
     </div>
   </div>
 </div>
@@ -543,9 +601,10 @@
         Thank you for being there for me as a sweet mother, never scolded me but always corrected me 🫂<br><br>
         With Love- <strong>Aarthi👻</strong></p>
       </div>
-      <!-- Replay button only - changed to "Replay the Memories" -->
+      <!-- Two buttons: Replay the Memories + Quit the Memories -->
       <div class="button-group" style="margin-top: 1.5rem;">
         <button class="btn" onclick="fullReplay()">🔄 Replay the Memories</button>
+        <button class="btn" onclick="quitMemories()">🚪 Quit the Memories</button>
       </div>
       <p style="margin-top: 1rem; color:#655A7C; font-size: 0.9rem; text-align:center;">✨ forever chaotic, forever thankful ✨</p>
     </div>
@@ -569,12 +628,53 @@
     }
   })();
 
+  // Confetti function
+  function showConfetti() {
+    const colors = ['#AB92BF', '#655A7C', '#FDF1E2', '#ff69b4', '#ffd700'];
+    for (let i = 0; i < 100; i++) {
+      const confetti = document.createElement('div');
+      confetti.style.position = 'fixed';
+      confetti.style.width = Math.random() * 10 + 5 + 'px';
+      confetti.style.height = Math.random() * 10 + 5 + 'px';
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.left = Math.random() * 100 + '%';
+      confetti.style.top = '-20px';
+      confetti.style.borderRadius = '50%';
+      confetti.style.pointerEvents = 'none';
+      confetti.style.zIndex = '999';
+      confetti.style.opacity = '0.8';
+      confetti.style.animation = `fall ${Math.random() * 2 + 2}s linear forwards`;
+      document.body.appendChild(confetti);
+      
+      setTimeout(() => confetti.remove(), 3000);
+    }
+  }
+
+  // Add CSS for confetti
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  function quitMemories() {
+    showConfetti();
+    document.getElementById('popupOverlay').classList.add('active');
+  }
+
+  function closePopup() {
+    document.getElementById('popupOverlay').classList.remove('active');
+  }
+
   function goToPage(idx) {
     if (idx > 4) return;
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById('page' + idx).classList.add('active');
     if (idx === 0) {
-      const msgs = ['recovering cursed memories…', 'friendship level: infinite', 'emotional damage detected ⚠'];
+      const msgs = ['💖 loading beautiful memories...', 'friendship level: infinite ✨', '💕 getting ready to make you smile...'];
       document.getElementById('fakeLoad0').textContent = msgs[Math.floor(Math.random() * msgs.length)];
       // Reset envelope and letter on replay
       const envelope = document.getElementById('envelope');
@@ -698,7 +798,7 @@
 
   window.addEventListener('load', () => {
     const fl = document.getElementById('fakeLoad0');
-    if (fl) fl.textContent = 'friendship level: infinite ✨';
+    if (fl) fl.textContent = '💖 making sweet memories for you...';
   });
 </script>
 </body>
