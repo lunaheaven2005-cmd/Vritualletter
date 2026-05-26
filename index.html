@@ -204,6 +204,83 @@
       cursor: pointer;
     }
 
+    /* Memory Slideshow Overlay */
+    .slideshow-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      z-index: 2000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.5s ease;
+      flex-direction: column;
+    }
+    .slideshow-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .slideshow-container {
+      width: 80%;
+      max-width: 500px;
+      text-align: center;
+    }
+    .slideshow-title {
+      color: #FDF1E2;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .slideshow-frame {
+      background: rgba(255,255,255,0.95);
+      border-radius: 30px;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      animation: slideGlow 1s infinite alternate;
+    }
+    @keyframes slideGlow {
+      0% { box-shadow: 0 20px 40px rgba(171,146,191,0.3); }
+      100% { box-shadow: 0 30px 60px rgba(171,146,191,0.6); }
+    }
+    .slideshow-image {
+      width: 100%;
+      max-height: 60vh;
+      object-fit: contain;
+      border-radius: 20px;
+    }
+    .slideshow-caption {
+      margin-top: 15px;
+      font-size: 1rem;
+      color: #655A7C;
+      font-weight: 500;
+      text-align: center;
+    }
+    .slideshow-dots {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+      transition: 0.3s;
+    }
+    .dot.active {
+      background: #AB92BF;
+      width: 25px;
+      border-radius: 10px;
+    }
+
     /* Question styles */
     .option-btn {
       background: rgba(255, 255, 255, 0.6);
@@ -457,6 +534,8 @@
       .square-question { padding: 1.5rem; }
       .floating-doodle { font-size: 1.2rem; }
       .glass { padding: 1.2rem; }
+      .slideshow-container { width: 90%; }
+      .slideshow-image { max-height: 50vh; }
     }
   </style>
 </head>
@@ -469,7 +548,20 @@
     <h3>🎉 YAYYYY! 🎉</h3>
     <p>✨ The Memories Tour Ends ✨</p>
     <p>💖 Thank you for being there for me! 💖</p>
-    <button onclick="closePopup()">🤗 Close 🤗</button>
+    <button onclick="closePopupAndStartSlideshow()">🤗 Watch Memories Roll 🤗</button>
+  </div>
+</div>
+
+<!-- Memory Slideshow Overlay -->
+<div class="slideshow-overlay" id="slideshowOverlay">
+  <div class="slideshow-container">
+    <div class="slideshow-title">📸 Our Beautiful Memories 🎞️</div>
+    <div class="slideshow-frame">
+      <img class="slideshow-image" id="slideshowImage" src="" alt="Memory">
+      <div class="slideshow-caption" id="slideshowCaption"></div>
+    </div>
+    <div class="slideshow-dots" id="slideshowDots"></div>
+    <p style="color:#FDF1E2; margin-top: 15px; font-size: 0.8rem;">✨ reliving our journey... ✨</p>
   </div>
 </div>
 
@@ -594,16 +686,15 @@
           <img src="3.jpeg" alt="Beautiful memory 3">
         </div>
         
-        <p><strong>Love you Bro❤️🫂</strong><br><br>
+        <p><strong>Love you Bro❤️🫂</strong><br>
         Thank you so much for being there for me always no matter what😘<br><br>
         Thank you for being there for me as my Best Friend supporting my stupid ideas 😭<br><br>
         Thank you for being there for me as a Sister listing to all rantings 🫶<br><br>
         Thank you for being there for me as a sweet mother, never scolded me but always corrected me 🫂<br><br>
         With Love- <strong>Aarthi👻</strong></p>
       </div>
-      <!-- Two buttons: Replay the Memories + Quit the Memories -->
+      <!-- Only Quit the Memories button (removed Replay) -->
       <div class="button-group" style="margin-top: 1.5rem;">
-        <button class="btn" onclick="fullReplay()">🔄 Replay the Memories</button>
         <button class="btn" onclick="quitMemories()">🚪 Quit the Memories</button>
       </div>
       <p style="margin-top: 1rem; color:#655A7C; font-size: 0.9rem; text-align:center;">✨ forever chaotic, forever thankful ✨</p>
@@ -612,6 +703,26 @@
 </div>
 
 <script>
+  // All memory images and captions
+  const memoryImages = [
+    { src: 'op.jpeg', caption: '💫 The Beginning 💫' },
+    { src: 'd1 (2).jpeg', caption: 'we looked so dumb here 😭' },
+    { src: 'd2.jpeg', caption: 'Kinda my favourite of your birthdays😘' },
+    { src: 'd3.jpeg', caption: 'feel like nalla siricha mari irupom moment😅😁' },
+    { src: 'd5.jpeg', caption: 'cute laaaa 😭' },
+    { src: 'd4.jpeg', caption: 'sneaky peaky picutre i do remember, maybe you didnt😋' },
+    { src: 'c1.jpeg', caption: 'First nd last shopping, felt like never had a great time🫶' },
+    { src: 'c2.jpeg', caption: 'antha muslim get up ahh maraka matten broo, unexpected meet up 😂🤭' },
+    { src: 'c4.jpeg', caption: 'you were so annoying here 😭' },
+    { src: 'c5.jpeg', caption: 'forever moment❤️' },
+    { src: '1.jpeg', caption: '📸 beautiful memory 📸' },
+    { src: '2.jpeg', caption: '🎞️ another beautiful moment 🎞️' },
+    { src: '3.jpeg', caption: '💖 forever in my heart 💖' }
+  ];
+  
+  let slideshowIndex = 0;
+  let slideshowInterval;
+
   // SPARKLES
   (function createSparkles() {
     const container = document.getElementById('sparkle-container');
@@ -665,8 +776,47 @@
     document.getElementById('popupOverlay').classList.add('active');
   }
 
-  function closePopup() {
+  function closePopupAndStartSlideshow() {
     document.getElementById('popupOverlay').classList.remove('active');
+    startSlideshow();
+  }
+
+  function startSlideshow() {
+    const slideshowOverlay = document.getElementById('slideshowOverlay');
+    slideshowOverlay.classList.add('active');
+    slideshowIndex = 0;
+    updateSlideshow();
+    
+    // Auto-advance every 3 seconds
+    slideshowInterval = setInterval(() => {
+      slideshowIndex++;
+      if (slideshowIndex >= memoryImages.length) {
+        // End of slideshow - go back to first page
+        clearInterval(slideshowInterval);
+        slideshowOverlay.classList.remove('active');
+        fullReplay();
+      } else {
+        updateSlideshow();
+      }
+    }, 3000);
+  }
+
+  function updateSlideshow() {
+    const img = document.getElementById('slideshowImage');
+    const caption = document.getElementById('slideshowCaption');
+    const dotsContainer = document.getElementById('slideshowDots');
+    
+    img.src = memoryImages[slideshowIndex].src;
+    caption.textContent = memoryImages[slideshowIndex].caption;
+    
+    // Update dots
+    dotsContainer.innerHTML = '';
+    for (let i = 0; i < memoryImages.length; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      if (i === slideshowIndex) dot.classList.add('active');
+      dotsContainer.appendChild(dot);
+    }
   }
 
   function goToPage(idx) {
@@ -684,14 +834,12 @@
         letter.classList.remove('show');
       }
     }
-    // Reset question page state when going back to it
     if (idx === 1) {
       resetQuestionUI();
     }
   }
   
   function fullReplay() {
-    // Reset envelope and letter
     const envelope = document.getElementById('envelope');
     const letter = document.getElementById('letterContent');
     if (envelope && letter) {
